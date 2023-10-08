@@ -1,17 +1,17 @@
 let audioCtx;
 let audioDestination;
 let fullStream;
-let isPlaying = false;
+let isRecording = false;
 const videoElement = document.querySelector("#video-wrapper video");
 
 function initFullStream() {
   fullStream = new MediaStream();
 
   // Add track for fullAudio
-  // audioCtx = new AudioContext();
-  // audioDestination = audioCtx.createMediaStreamDestination();
-  // const fullAudioTrack = audioDestination.stream.getAudioTracks()[0];
-  // fullStream.addTrack(fullAudioTrack);
+  audioCtx = new AudioContext();
+  audioDestination = audioCtx.createMediaStreamDestination();
+  const fullAudioTrack = audioDestination.stream.getAudioTracks()[0];
+  fullStream.addTrack(fullAudioTrack);
 
   console.log("fullStream created");
 }
@@ -24,17 +24,8 @@ async function connectMic() {
     });
   console.log("micStream.getAudioTracks().length: ", micStream.getAudioTracks().length);
 
-
-  audioCtx = new AudioContext();
-  audioDestination = audioCtx.createMediaStreamDestination();
-
   const micSource = audioCtx.createMediaStreamSource(micStream);
   micSource.connect(audioDestination);
-
-  const fullAudioTrack = audioDestination.stream.getAudioTracks()[0];
-  fullStream.addTrack(fullAudioTrack);
-
-  // fullStream.addTrack(micStream.getAudioTracks()[0]);
 
   console.log("Mic connected");
 }
@@ -65,9 +56,12 @@ function playBlob(blob) {
 }
 
 function record() {
+  console.log("Start recording");
+  isRecording = true;
+
   // Set up MediaRecorder
   const recordedChunks = [];
-  const mediaRecorder = new MediaRecorder(fullStream, { mimeType: "video/webm;codecs=vp9" });
+  const mediaRecorder = new MediaRecorder(fullStream, { mimeType: "video/webm" });
   mediaRecorder.ondataavailable = (event) => {
     console.log("MediaRecorder.ondataavailable(): ", event.data);
     recordedChunks.push(event.data);
@@ -75,7 +69,7 @@ function record() {
 
   mediaRecorder.onstop = () => {
     console.log("MediaRecorder.onstop(): ", recordedChunks);
-    const blob = new Blob(recordedChunks, { type: "video/webm;codecs=vp9" });
+    const blob = new Blob(recordedChunks, { type: "video/webm" });
     console.log("MediaRecorder.onstop().blob: ", blob);
 
     playBlob(blob);
@@ -89,6 +83,13 @@ function record() {
   }, 10000);
 }
 
+document.querySelector("#init-full-stream-button").addEventListener("click", () => {
+  initFullStream();
+  playStream();
+  document.querySelector("#init-full-stream-button").setAttribute("disabled", true);
+  document.querySelector("#connect-screen-button").removeAttribute("disabled");
+  document.querySelector("#connect-mic-button").removeAttribute("disabled");
+});
 
 
 document.querySelector("#start-recording-button").addEventListener("click", () => {
@@ -99,19 +100,14 @@ document.querySelector("#start-recording-button").addEventListener("click", () =
 
 document.querySelector("#connect-screen-button").addEventListener("click", () => {
   connectScreen();
-  if (!isPlaying) {
-    playStream();
-  }
+  document.querySelector("#start-recording-button").removeAttribute("disabled");
   document.querySelector("#connect-screen-button").setAttribute("disabled", true);
 });
 
 document.querySelector("#connect-mic-button").addEventListener("click", () => {
   connectMic();
-  if (!isPlaying) {
-    playStream();
+  if (!isRecording) {
+    document.querySelector("#start-recording-button").removeAttribute("disabled");
   }
   document.querySelector("#connect-mic-button").setAttribute("disabled", true);
 });
-
-
-initFullStream();
