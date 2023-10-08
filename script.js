@@ -1,6 +1,7 @@
 let audioCtx;
 let audioDestination;
 let fullStream;
+let isPlaying = false;
 const videoElement = document.querySelector("#video-wrapper video");
 
 function initFullStream() {
@@ -25,8 +26,9 @@ async function connectMic() {
 
 
   audioCtx = new AudioContext();
-  const micSource = audioCtx.createMediaStreamSource(micStream);
   audioDestination = audioCtx.createMediaStreamDestination();
+
+  const micSource = audioCtx.createMediaStreamSource(micStream);
   micSource.connect(audioDestination);
 
   const fullAudioTrack = audioDestination.stream.getAudioTracks()[0];
@@ -92,18 +94,24 @@ function record() {
 document.querySelector("#start-recording-button").addEventListener("click", () => {
   record();
   document.querySelector("#start-recording-button").setAttribute("disabled", true);
+  document.querySelector("#connect-screen-button").setAttribute("disabled", true);
 });
 
 document.querySelector("#connect-screen-button").addEventListener("click", () => {
   connectScreen();
+  if (!isPlaying) {
+    playStream();
+  }
   document.querySelector("#connect-screen-button").setAttribute("disabled", true);
 });
 
 document.querySelector("#connect-mic-button").addEventListener("click", () => {
   connectMic();
+  if (!isPlaying) {
+    playStream();
+  }
   document.querySelector("#connect-mic-button").setAttribute("disabled", true);
 });
 
 
 initFullStream();
-playStream();
