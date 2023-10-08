@@ -13,6 +13,14 @@ function initFullStream() {
   const fullAudioTrack = audioDestination.stream.getAudioTracks()[0];
   fullStream.addTrack(fullAudioTrack);
 
+  // Adding a silent audioTrack to overpass chrome bug: https://bugs.chromium.org/p/chromium/issues/detail?id=1490888
+  // from: https://stackoverflow.com/a/68644274/316700
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  gainNode.gain.value = 0;
+  oscillator.connect(gainNode);
+  gainNode.connect(audioDestination);
+
   console.log("fullStream created");
 }
 

@@ -18,6 +18,13 @@ async function record() {
   const micSource = audioCtx.createMediaStreamSource(micStream);
   // micSource.connect(audioDestination); // If I un-comment this line, the recording is made properly. But this connection has to be made after
 
+  // from: https://stackoverflow.com/a/68644274/316700
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  gainNode.gain.value = 0;
+  oscillator.connect(gainNode);
+  gainNode.connect(audioDestination);
+
   // Play realtime stream
   videoElement.srcObject = fullStream;
   videoElement.play();
